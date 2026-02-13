@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Туризм в ВКО - Карта и Поиск Баз Отдыха</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Leaflet для встроенной карты -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <!-- Leaflet Routing Machine для построения маршрутов -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.css" />
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <header class="header">
+            <h1>🗺️ Explore VKO</h1>
+            <p>Найдите идеальное туристическое место в Восточно-Казахстанской области</p>
+        </header>
+
+        <!-- Основной контент -->
+        <div class="main-content">
+            <!-- Левая панель - Поиск -->
+            <div class="left-panel">
+                <div class="search-section">
+                    <h2>🔍 Умный Поиск</h2>
+                    <div class="search-box">
+                        <input type="text" id="searchInput"
+                            placeholder="Введите название базы отдыха, тип услуги или местность в ВКО..."
+                            class="search-input">
+                        <button id="searchBtn" class="search-btn">Поиск</button>
+                    </div>
+                    <small class="info-text">⚠️ Поиск работает по базам отдыха, паркам и достопримечательностям
+                        ВКО</small>
+                </div>
+
+                <!-- Фильтры -->
+                <div class="filters-section">
+                    <h3>🎯 Фильтры</h3>
+                    <div class="filter-group">
+                        <label>💰 Цена:</label>
+                        <select id="priceFilter" class="filter-select">
+                            <option value="">Все цены</option>
+                            <option value="budget">💰 Бюджетная</option>
+                            <option value="moderate">💰💰 Средняя</option>
+                            <option value="premium">💰💰💰 Премиум</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>⭐ Рейтинг:</label>
+                        <select id="ratingFilter" class="filter-select">
+                            <option value="">Любой рейтинг</option>
+                            <option value="4.5">4.5+ звезд</option>
+                            <option value="4.0">4.0+ звезд</option>
+                            <option value="3.5">3.5+ звезд</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>💧 Водоем:</label>
+                        <select id="waterFilter" class="filter-select">
+                            <option value="">Все водоемы</option>
+                            <option value="lake">🏊 Озера</option>
+                            <option value="reservoir">💧 Водохранилище</option>
+                            <option value="mountain">⛰️ Горы/Ущелье</option>
+                            <option value="park">🦒 ЗооПарки</option>
+                        </select>
+                    </div>
+                    <button id="favoritesBtn" class="filter-btn">❤️ Избранные</button>
+                    <button id="routeBuilderBtn" class="filter-btn route-btn">
+                        <i class="fas fa-route"></i> 🗺️ Построить маршрут
+                    </button>
+                    <button id="resetFiltersBtn" class="filter-btn reset">↻ Сброс</button>
+                </div>
+
+                <!-- Результаты поиска -->
+                <div class="results-section">
+                    <div id="responseContainer" class="response-container"></div>
+                </div>
+
+                <!-- История поиска -->
+                <div class="history-section">
+                    <h3>📋 Недавние поиски</h3>
+                    <div id="searchHistory" class="search-history"></div>
+                </div>
+                <div class="MadeBy-section">
+                    <h3>Сделано командой Compsquad!
+                        Надеемся, что наш проект поможет вам открыть для туристов идеальные места😊
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Правая панель - Карта Leaflet -->
+            <div class="right-panel">
+                <h2>🗺️ Карта ВКО</h2>
+                <div id="mapContainer" class="map-container">
+                    <div class="map-legend">
+                        <div class="map-legend-title">📍 Типы локаций:</div>
+                        <div class="legend-item">
+                            <div class="legend-icon beach">🏖️</div>
+                            <div class="legend-label">Пляж/Озеро</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon forest">🌲</div>
+                            <div class="legend-label">Лес/Парк</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon mountains">⛰️</div>
+                            <div class="legend-label">Горы</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon park">🦒</div>
+                            <div class="legend-label">ЗооПарк</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для информации о базе отдыха -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для построения маршрута -->
+    <div id="routeModal" class="modal">
+        <div class="modal-content route-modal-content">
+            <span class="close" id="closeRouteModal">&times;</span>
+            <h2>🗺️ Построение маршрута</h2>
+            <div class="route-container">
+                <div class="location-section">
+                    <div class="location-input-group">
+                        <label>📍 Ваше местоположение:</label>
+                        <button id="getLocationBtn" class="location-btn">
+                            <i class="fas fa-location-crosshairs"></i> Определить мое местоположение
+                        </button>
+                        <input type="text" id="userLocationInput" placeholder="Ваше местоположение..."
+                            class="location-input" readonly>
+                    </div>
+                    <div class="location-input-group">
+                        <label>🎯 Пункт назначения:</label>
+                        <input type="text" id="destinationInput" placeholder="Пункт назначения..."
+                            class="location-input" readonly>
+                        <button id="selectDestinationBtn" class="location-btn" style="margin-top: 8px;">
+                            <i class="fas fa-search"></i> Выбрать из списка мест
+                        </button>
+                    </div>
+                </div>
+
+                <div class="route-options">
+                    <h3>Выберите тип маршрута:</h3>
+                    <div class="route-buttons">
+                        <button class="route-type-btn active" data-type="car">
+                            <i class="fas fa-car"></i><br>На машине
+                        </button>
+                        <button class="route-type-btn" data-type="bike">
+                            <i class="fas fa-bicycle"></i><br>На велосипеде
+                        </button>
+                        <button class="route-type-btn" data-type="foot">
+                            <i class="fas fa-shoe-prints"></i><br>Пешком
+                        </button>
+                    </div>
+                </div>
+
+                <div class="route-info" id="routeInfo" style="display: none;">
+                    <div class="route-details">
+                        <div class="detail-item">
+                            <span class="detail-label">⏱️ Время в пути:</span>
+                            <span class="detail-value" id="routeTime">--</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📏 Расстояние:</span>
+                            <span class="detail-value" id="routeDistance">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracking-section">
+                    <h3>📍 Отслеживание маршрута:</h3>
+                    <button id="startTrackingBtn" class="start-tracking-btn">
+                        <i class="fas fa-play"></i> Начать отслеживание
+                    </button>
+                    <button id="stopTrackingBtn" class="stop-tracking-btn" style="display: none;">
+                        <i class="fas fa-stop"></i> Остановить отслеживание
+                    </button>
+                    <div id="trackingStatus" class="tracking-status"></div>
+                </div>
+
+                <button id="buildRouteBtn" class="build-route-btn">
+                    <i class="fas fa-route"></i> Построить маршрут
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Загрузка информации...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
